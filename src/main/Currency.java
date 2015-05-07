@@ -4,7 +4,7 @@ enum Currency {
 
     USD("R01235"),
     EUR("R01239"),
-    RUB("n/a");
+    RUB(null);
 
     private final String cbrCode;
 
