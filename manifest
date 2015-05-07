@@ -1,0 +1,2 @@
+Class-Path: lib/jansi-1.4.jar
+Main-Class: main.ExchangeRates
