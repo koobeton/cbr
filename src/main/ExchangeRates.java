@@ -1,5 +1,9 @@
 package main;
 
+import static misc.Paint.*;
+
+import org.fusesource.jansi.AnsiConsole;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,7 +15,7 @@ import java.util.Calendar;
 public class ExchangeRates {
 
     private static final String DATE_FORMAT = "dd.MM.yyyy";
-    private static final String REQUEST_METHOD = "GET";
+    private static final String REQUEST_METHOD_GET = "GET";
     private static final String EMPTY_STRING = "";
 
     private static String today, yesterday;
@@ -32,21 +36,32 @@ public class ExchangeRates {
         BufferedReader reader = null;
         String line, result;
 
+        AnsiConsole.systemInstall();
+
         try {
             for (Currency currency : Currency.values()) {
                 result = EMPTY_STRING;
-                if (currency.getCbrCode() != null) {
-                    url = new URL(String.format("%s%s", cbrURL, currency.getCbrCode()));
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod(REQUEST_METHOD);
-                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    while ((line = reader.readLine()) != null) {
-                        result += line;
-                    }
-                    reader.close();
-                    connection.disconnect();
-                    System.out.printf("%s:%n%s%n", currency.name(), result);
+                url = new URL(cbrURL + currency.getCbrCode());
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod(REQUEST_METHOD_GET);
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                while ((line = reader.readLine()) != null) {
+                    result += line;
                 }
+                reader.close();
+                connection.disconnect();
+
+                System.out.printf("%s:%n%s%n",
+                        getAnsiString(MAGENTA, currency.name()),
+                        result);
+
+                /*
+                double v = 999.123456789;
+                double d = -1.123456789;
+                System.out.printf("%s %s%n",
+                        getAnsiString(GREEN, String.format("%+.4f", v)),
+                        getAnsiString(RED, String.format("%.2f", d)));
+                */
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,6 +72,7 @@ public class ExchangeRates {
                 e.printStackTrace();
             }
             if (connection != null) connection.disconnect();
+            AnsiConsole.systemUninstall();
         }
     }
 }
