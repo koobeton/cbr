@@ -51,17 +51,9 @@ public class ExchangeRates {
                 reader.close();
                 connection.disconnect();
 
-                System.out.printf("%s:%n%s%n",
-                        getAnsiString(MAGENTA, currency.name()),
-                        result);
-
-                /*
-                double v = 999.123456789;
-                double d = -1.123456789;
                 System.out.printf("%s %s%n",
-                        getAnsiString(GREEN, String.format("%+.4f", v)),
-                        getAnsiString(RED, String.format("%.2f", d)));
-                */
+                        getAnsiString(MAGENTA, currency.name()),
+                        parseXML(result));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -74,5 +66,18 @@ public class ExchangeRates {
             if (connection != null) connection.disconnect();
             AnsiConsole.systemUninstall();
         }
+    }
+
+    private static String parseXML(String xml) {
+
+        /*
+        double v = 999.123456789;
+        double d = -1.123456789;
+        System.out.printf("%s %s%n",
+                getAnsiString(GREEN, String.format("%+.4f", v)),
+                getAnsiString(RED, String.format("%.2f", d)));
+        */
+
+        return getAnsiString(WHITE, xml);
     }
 }
