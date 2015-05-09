@@ -3,10 +3,10 @@ package main;
 import static misc.Paint.*;
 
 import org.fusesource.jansi.AnsiConsole;
+import org.w3c.dom.Document;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -16,7 +16,6 @@ public class ExchangeRates {
 
     private static final String DATE_FORMAT = "dd.MM.yyyy";
     private static final String REQUEST_METHOD_GET = "GET";
-    private static final String EMPTY_STRING = "";
 
     private static String today, yesterday;
     static {
@@ -31,44 +30,36 @@ public class ExchangeRates {
 
     public static void main(String... args) {
 
-        URL url;
-        HttpURLConnection connection = null;
-        BufferedReader reader = null;
-        String line, result;
-
         AnsiConsole.systemInstall();
 
+        URL url;
+        HttpURLConnection connection = null;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        Document document;
+
         try {
+            builder = factory.newDocumentBuilder();
             for (Currency currency : Currency.values()) {
-                result = EMPTY_STRING;
                 url = new URL(cbrURL + currency.getCbrCode());
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod(REQUEST_METHOD_GET);
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                while ((line = reader.readLine()) != null) {
-                    result += line;
-                }
-                reader.close();
+                document = builder.parse(connection.getInputStream());
                 connection.disconnect();
 
                 System.out.printf("%s %s%n",
                         getAnsiString(MAGENTA, currency.name()),
-                        parseXML(result));
+                        getRates(document));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (reader != null) reader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             if (connection != null) connection.disconnect();
             AnsiConsole.systemUninstall();
         }
     }
 
-    private static String parseXML(String xml) {
+    private static String getRates(Document xml) {
 
         /*
         double v = 999.123456789;
@@ -78,6 +69,6 @@ public class ExchangeRates {
                 getAnsiString(RED, String.format("%.2f", d)));
         */
 
-        return getAnsiString(WHITE, xml);
+        return getAnsiString(WHITE, xml.getDocumentElement().getTagName());
     }
 }
