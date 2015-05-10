@@ -1,17 +1,41 @@
 package main;
 
-public enum Currency {
+class Currency {
 
-    USD("R01235"),
-    EUR("R01239");
+    private String name;
+    private double todayValue;
+    private double yesterdayValue;
+    private boolean valid = false;
 
-    private final String cbrCode;
-
-    Currency(String cbrCode) {
-        this.cbrCode = cbrCode;
+    Currency(String name) {
+        this.name = name.toUpperCase();
     }
 
-    String getCbrCode() {
-        return cbrCode;
+    void setTodayValue(double todayValue) {
+        this.todayValue = todayValue;
+    }
+
+    void setYesterdayValue(double yesterdayValue) {
+        this.yesterdayValue = yesterdayValue;
+    }
+
+    void setValid() {
+        this.valid = true;
+    }
+
+    String getName() {
+        return name;
+    }
+
+    double getTodayValue() {
+        return todayValue;
+    }
+
+    double getDelta() {
+        return todayValue - yesterdayValue;
+    }
+
+    boolean isValid() {
+        return valid;
     }
 }

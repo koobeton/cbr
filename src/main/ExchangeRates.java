@@ -14,34 +14,51 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class ExchangeRates {
 
-    private static String today, yesterday;
-    static {
+    private static final String CBR_URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=";
+
+    private String today, yesterday;
+    private List<Currency> currencyList = new ArrayList<>();
+
+    private ExchangeRates() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         Calendar calendar = Calendar.getInstance();
         today = dateFormat.format(calendar.getTime());
         calendar.add(Calendar.DAY_OF_YEAR, -1);
         yesterday = dateFormat.format(calendar.getTime());
     }
-    private static String cbrURL = String.format("http://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=%s&date_req2=%s&VAL_NM_RQ=",
-            yesterday, today);
 
     public static void main(String... args) {
 
-        for (Currency currency : Currency.values()) {
-            print(getRate(currency));
+        if (args.length == 0) {
+            showUsage();
+            System.exit(0);
+        }
+
+        ExchangeRates rates = new ExchangeRates();
+
+        for (String arg : args) {
+            rates.currencyList.add(new Currency(arg));
+        }
+
+        rates.setCbrRates();
+
+        for (Currency currency : rates.currencyList) {
+            print(currency);
         }
     }
 
-    public static Rate getRate(Currency currency) {
-
-        return parseXML(getXML(currency), currency);
+    private void setCbrRates() {
+        parseXML(getXML(yesterday));
+        parseXML(getXML(today));
     }
 
-    private static Document getXML(Currency currency) {
+    private Document getXML(String date) {
 
         URL url;
         HttpURLConnection connection = null;
@@ -51,7 +68,7 @@ public class ExchangeRates {
         Document document = null;
 
         try {
-            url = new URL(cbrURL + currency.getCbrCode());
+            url = new URL(CBR_URL + date);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             buffer = new BufferedInputStream(connection.getInputStream());
@@ -72,48 +89,69 @@ public class ExchangeRates {
         return document;
     }
 
-    private static Rate parseXML(Document xml, Currency currency) {
+    private void parseXML(Document xml) {
 
-        double yesterdayValue = 0;
-        double todayValue = 0;
+        if (xml == null) return;
 
-        if (xml != null) {
+        String date = xml.getDocumentElement().getAttribute("Date");
 
-            NodeList recordList = xml.getElementsByTagName("Record");
-            for (int i = 0; i < recordList.getLength(); i++) {
+        NodeList charCodeList = xml.getElementsByTagName("CharCode");
+        for (int i = 0; i < charCodeList.getLength(); i++) {
+            Element charCode = (Element) charCodeList.item(i);
 
-                Element record = (Element) recordList.item(i);
+            for (Currency currency : currencyList) {
+                if (currency.getName().toUpperCase().equals(charCode.getTextContent().toUpperCase())) {
+                    Element valute = (Element) charCode.getParentNode();
 
-                Element value = (Element) record.getElementsByTagName("Value").item(0);
-                double currentValue = Double.parseDouble(value.getTextContent().replace(',', '.'));
+                    Element nominal = (Element) valute.getElementsByTagName("Nominal").item(0);
+                    int currentNominal = Integer.parseInt(nominal.getTextContent());
 
-                Element nominal = (Element) record.getElementsByTagName("Nominal").item(0);
-                int currentNominal = Integer.parseInt(nominal.getTextContent());
+                    Element value = (Element) valute.getElementsByTagName("Value").item(0);
+                    double currentValue = Double.parseDouble(value.getTextContent().replace(',', '.')) / currentNominal;
 
-                String date = record.getAttribute("Date");
-                if (date.equals(yesterday)) {
-                    yesterdayValue = currentValue / currentNominal;
-                } else if (date.equals(today)) {
-                    todayValue = currentValue / currentNominal;
+                    if (date.equals(yesterday)) {
+                        currency.setYesterdayValue(currentValue);
+                    } else if (date.equals(today)) {
+                        currency.setTodayValue(currentValue);
+                    }
+
+                    currency.setValid();
                 }
             }
         }
-
-        return new Rate(currency, todayValue, todayValue - yesterdayValue);
     }
 
-    public static void print(Rate rate) {
+    private static void print(Currency currency) {
 
-        Currency currency = rate.getCurrency();
-        double todayValue = rate.getTodayValue();
-        double delta = rate.getDelta();
+        String name = currency.getName();
+        double todayValue = currency.getTodayValue();
+        double delta = currency.getDelta();
 
         AnsiConsole.systemInstall();
 
-        System.out.printf("%s %s %s%n",
-                getAnsiString(MAGENTA, currency.name()),
-                getAnsiString(WHITE, String.format("%.4f", todayValue)),
-                getAnsiString(delta < 0 ? RED : GREEN, String.format("%+.2f", delta)));
+        System.out.printf("%s %s%n",
+                getAnsiString(MAGENTA, name),
+                currency.isValid() ?
+                        String.format("%s %s",
+                                getAnsiString(WHITE, String.format("%.4f", todayValue)),
+                                getAnsiString(delta < 0 ? RED : GREEN, String.format("%+.2f", delta))) :
+                        getAnsiString(RED, "no such currency")
+                );
+
+        AnsiConsole.systemUninstall();
+    }
+
+    private static void showUsage() {
+
+        AnsiConsole.systemInstall();
+
+        System.out.printf("%s java -jar %s %s%n" +
+                        "\twhere %s - the ISO 4217 currency code (%s)%n",
+                getAnsiString(WHITE, "Usage:"),
+                getAnsiString(YELLOW, "cbr.jar"),
+                getAnsiString(WHITE, "code ..."),
+                getAnsiString(WHITE, "code"),
+                getAnsiString(MAGENTA, "USD EUR GBP ..."));
 
         AnsiConsole.systemUninstall();
     }
