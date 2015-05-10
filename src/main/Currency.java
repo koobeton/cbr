@@ -1,6 +1,6 @@
 package main;
 
-enum Currency {
+public enum Currency {
 
     USD("R01235"),
     EUR("R01239");

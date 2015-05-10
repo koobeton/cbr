@@ -18,12 +18,9 @@ import java.util.Calendar;
 
 public class ExchangeRates {
 
-    private static final String DATE_FORMAT = "dd.MM.yyyy";
-    private static final String REQUEST_METHOD_GET = "GET";
-
     private static String today, yesterday;
     static {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         Calendar calendar = Calendar.getInstance();
         today = dateFormat.format(calendar.getTime());
         calendar.add(Calendar.DAY_OF_YEAR, -1);
@@ -34,31 +31,33 @@ public class ExchangeRates {
 
     public static void main(String... args) {
 
-        AnsiConsole.systemInstall();
+        for (Currency currency : Currency.values()) {
+            print(getRate(currency));
+        }
+    }
+
+    public static Rate getRate(Currency currency) {
+
+        return parseXML(getXML(currency), currency);
+    }
+
+    private static Document getXML(Currency currency) {
 
         URL url;
         HttpURLConnection connection = null;
         BufferedInputStream buffer = null;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
-        Document document;
+        Document document = null;
 
         try {
+            url = new URL(cbrURL + currency.getCbrCode());
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            buffer = new BufferedInputStream(connection.getInputStream());
+
             builder = factory.newDocumentBuilder();
-            for (Currency currency : Currency.values()) {
-                url = new URL(cbrURL + currency.getCbrCode());
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod(REQUEST_METHOD_GET);
-                buffer = new BufferedInputStream(connection.getInputStream());
-                document = builder.parse(buffer);
-
-                buffer.close();
-                connection.disconnect();
-
-                System.out.printf("%s %s%n",
-                        getAnsiString(MAGENTA, currency.name()),
-                        parseRates(document));
-            }
+            document = builder.parse(buffer);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -68,32 +67,47 @@ public class ExchangeRates {
                 e.printStackTrace();
             }
             if (connection != null) connection.disconnect();
-            AnsiConsole.systemUninstall();
         }
+
+        return document;
     }
 
-    private static String parseRates(Document xml) {
+    private static Rate parseXML(Document xml, Currency currency) {
 
         double yesterdayValue = 0;
         double todayValue = 0;
-        double delta;
 
-        NodeList recordList = xml.getElementsByTagName("Record");
-        for (int i = 0; i < recordList.getLength(); i++) {
-            Element record = (Element) recordList.item(i);
-            Element value = (Element) record.getElementsByTagName("Value").item(0);
-            double currentValue = Double.parseDouble(value.getTextContent().replace(',', '.'));
-            String date = record.getAttribute("Date");
-            if (date.equals(yesterday)) {
-                yesterdayValue = currentValue;
-            } else if (date.equals(today)) {
-                todayValue = currentValue;
+        if (xml != null) {
+            NodeList recordList = xml.getElementsByTagName("Record");
+            for (int i = 0; i < recordList.getLength(); i++) {
+                Element record = (Element) recordList.item(i);
+                Element value = (Element) record.getElementsByTagName("Value").item(0);
+                double currentValue = Double.parseDouble(value.getTextContent().replace(',', '.'));
+                String date = record.getAttribute("Date");
+                if (date.equals(yesterday)) {
+                    yesterdayValue = currentValue;
+                } else if (date.equals(today)) {
+                    todayValue = currentValue;
+                }
             }
         }
-        delta = todayValue - yesterdayValue;
 
-        return String.format("%s %s",
+        return new Rate(currency, todayValue, todayValue - yesterdayValue);
+    }
+
+    public static void print(Rate rate) {
+
+        Currency currency = rate.getCurrency();
+        double todayValue = rate.getTodayValue();
+        double delta = rate.getDelta();
+
+        AnsiConsole.systemInstall();
+
+        System.out.printf("%s %s %s%n",
+                getAnsiString(MAGENTA, currency.name()),
                 getAnsiString(WHITE, String.format("%.4f", todayValue)),
                 getAnsiString(delta < 0 ? RED : GREEN, String.format("%+.2f", delta)));
+
+        AnsiConsole.systemUninstall();
     }
 }
