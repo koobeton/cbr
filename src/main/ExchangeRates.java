@@ -78,16 +78,23 @@ public class ExchangeRates {
         double todayValue = 0;
 
         if (xml != null) {
+
             NodeList recordList = xml.getElementsByTagName("Record");
             for (int i = 0; i < recordList.getLength(); i++) {
+
                 Element record = (Element) recordList.item(i);
+
                 Element value = (Element) record.getElementsByTagName("Value").item(0);
                 double currentValue = Double.parseDouble(value.getTextContent().replace(',', '.'));
+
+                Element nominal = (Element) record.getElementsByTagName("Nominal").item(0);
+                int currentNominal = Integer.parseInt(nominal.getTextContent());
+
                 String date = record.getAttribute("Date");
                 if (date.equals(yesterday)) {
-                    yesterdayValue = currentValue;
+                    yesterdayValue = currentValue / currentNominal;
                 } else if (date.equals(today)) {
-                    todayValue = currentValue;
+                    todayValue = currentValue / currentNominal;
                 }
             }
         }
