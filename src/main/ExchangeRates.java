@@ -145,12 +145,10 @@ public class ExchangeRates {
 
         AnsiConsole.systemInstall();
 
-        System.out.printf("%s java -jar %s %s%n" +
+        System.out.printf("Usage: %s%n" +
                         "\twhere %s - the ISO 4217 currency code (%s)%n",
-                getAnsiString(WHITE, "Usage:"),
-                getAnsiString(YELLOW, "cbr.jar"),
-                getAnsiString(WHITE, "code ..."),
-                getAnsiString(WHITE, "code"),
+                getAnsiString(YELLOW, "java -jar cbr.jar code ..."),
+                getAnsiString(YELLOW, "code"),
                 getAnsiString(MAGENTA, "USD EUR GBP ..."));
 
         AnsiConsole.systemUninstall();
