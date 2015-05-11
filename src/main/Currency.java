@@ -23,18 +23,30 @@ public class Currency {
         this.valid = true;
     }
 
+    /**
+     * Return a currency name
+     * */
     public String getName() {
         return name;
     }
 
+    /**
+     * Return a currency today value
+     * */
     public double getTodayValue() {
         return todayValue;
     }
 
-    public double getDelta() {
+    /**
+     * Return a currency change
+     * */
+    public double getChange() {
         return todayValue - yesterdayValue;
     }
 
+    /**
+     * If the name of the given currency is not in server response, it is not valid
+     * */
     public boolean isValid() {
         return valid;
     }

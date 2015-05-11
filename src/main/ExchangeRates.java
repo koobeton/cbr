@@ -25,6 +25,11 @@ public class ExchangeRates {
     private String today, yesterday;
     private List<Currency> currencyList;
 
+    /**
+     * Creates an object of exchange rates from the provided alphabetic currency codes
+     *
+     * @param currencies alphabetic currency codes (e.g. USD EUR GBP ...)
+     * */
     public ExchangeRates(String... currencies) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         Calendar calendar = Calendar.getInstance();
@@ -52,6 +57,9 @@ public class ExchangeRates {
         }
     }
 
+    /**
+     * Returns a list of currencies with a fixed rate
+     * */
     public List<Currency> getRates() {
         parseXML(getXML(yesterday));
         parseXML(getXML(today));
@@ -121,11 +129,17 @@ public class ExchangeRates {
         }
     }
 
+    /**
+     * Prints a currency name, today value and change for the valid currency
+     * or an error message for the invalid currency
+     *
+     * @param currency currency to print
+     * */
     public static void print(Currency currency) {
 
         String name = currency.getName();
         double todayValue = currency.getTodayValue();
-        double delta = currency.getDelta();
+        double change = currency.getChange();
 
         AnsiConsole.systemInstall();
 
@@ -134,7 +148,7 @@ public class ExchangeRates {
                 currency.isValid() ?
                         String.format("%s %s",
                                 getAnsiString(WHITE, String.format("%.4f", todayValue)),
-                                getAnsiString(delta < 0 ? RED : GREEN, String.format("%+.2f", delta))) :
+                                getAnsiString(change < 0 ? RED : GREEN, String.format("%+.2f", change))) :
                         getAnsiString(RED, "no such currency")
                 );
 
