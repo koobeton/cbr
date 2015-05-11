@@ -1,21 +1,23 @@
 package main;
 
+import java.math.BigDecimal;
+
 public class Currency {
 
     private String name;
-    private double todayValue;
-    private double yesterdayValue;
+    private BigDecimal todayValue = BigDecimal.ZERO;
+    private BigDecimal yesterdayValue = BigDecimal.ZERO;
     private boolean valid = false;
 
     Currency(String name) {
         this.name = name.toUpperCase();
     }
 
-    void setTodayValue(double todayValue) {
+    void setTodayValue(BigDecimal todayValue) {
         this.todayValue = todayValue;
     }
 
-    void setYesterdayValue(double yesterdayValue) {
+    void setYesterdayValue(BigDecimal yesterdayValue) {
         this.yesterdayValue = yesterdayValue;
     }
 
@@ -36,15 +38,15 @@ public class Currency {
     /**
      * @return a currency today value
      * */
-    public double getTodayValue() {
+    public BigDecimal getTodayValue() {
         return todayValue;
     }
 
     /**
      * @return a currency change
      * */
-    public double getChange() {
-        return todayValue - yesterdayValue;
+    public BigDecimal getChange() {
+        return todayValue.subtract(yesterdayValue);
     }
 
     /**

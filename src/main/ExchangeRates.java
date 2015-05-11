@@ -11,6 +11,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -118,10 +119,10 @@ public class ExchangeRates {
                     Element valute = (Element) charCode.getParentNode();
 
                     Element nominal = (Element) valute.getElementsByTagName("Nominal").item(0);
-                    int currentNominal = Integer.parseInt(nominal.getTextContent());
+                    BigDecimal currentNominal = new BigDecimal(nominal.getTextContent());
 
                     Element value = (Element) valute.getElementsByTagName("Value").item(0);
-                    double currentValue = Double.parseDouble(value.getTextContent().replace(',', '.')) / currentNominal;
+                    BigDecimal currentValue = new BigDecimal(value.getTextContent().replace(',', '.')).divide(currentNominal);
 
                     if (date.equals(yesterday)) {
                         currency.setYesterdayValue(currentValue);
@@ -162,8 +163,8 @@ public class ExchangeRates {
     public static void print(Currency currency) {
 
         String name = currency.getName();
-        double todayValue = currency.getTodayValue();
-        double change = currency.getChange();
+        BigDecimal todayValue = currency.getTodayValue();
+        BigDecimal change = currency.getChange();
 
         AnsiConsole.systemInstall();
 
@@ -172,7 +173,7 @@ public class ExchangeRates {
                 currency.isValid() ?
                         String.format("%s %s",
                                 getAnsiString(WHITE, String.format("%.4f", todayValue)),
-                                getAnsiString(change < 0 ? RED : GREEN, String.format("%+.2f", change))) :
+                                getAnsiString(change.signum() < 0 ? RED : GREEN, String.format("%+.2f", change))) :
                         getAnsiString(RED, "no such currency")
                 );
 
