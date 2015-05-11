@@ -26,9 +26,12 @@ public class ExchangeRates {
     private List<Currency> currencyList;
 
     /**
-     * Creates an object of exchange rates from the provided alphabetic currency codes
+     * Creates an object of exchange rates from the provided alphabetic currency codes.
      *
      * @param currencies alphabetic currency codes (e.g. USD EUR GBP ...)
+     *
+     * @see Currency#getName()
+     * @see Currency#isValid()
      * */
     public ExchangeRates(String... currencies) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
@@ -52,13 +55,16 @@ public class ExchangeRates {
 
         ExchangeRates exchangeRates = new ExchangeRates(args);
 
-        for (Currency currency : exchangeRates.getRates()) {
-            print(currency);
-        }
+        print(exchangeRates.getRates());
     }
 
     /**
-     * Returns a list of currencies with a fixed rate
+     * @return a {@code List<Currency>} of currencies with a fixed rate
+     *
+     * @see Currency#getName()
+     * @see Currency#getTodayValue()
+     * @see Currency#getChange()
+     * @see Currency#isValid()
      * */
     public List<Currency> getRates() {
         parseXML(getXML(yesterday));
@@ -130,10 +136,28 @@ public class ExchangeRates {
     }
 
     /**
+     * Prints a currencies in the {@code List<Currency>} as described in the {@link #print(Currency)}.
+     *
+     * @param currencies list of currencies to print
+     *
+     * @see #print(Currency)
+     * @see Currency#isValid()
+     * */
+    public static void print(List<Currency> currencies) {
+
+        for (Currency currency : currencies) {
+            print(currency);
+        }
+    }
+
+    /**
      * Prints a currency name, today value and change for the valid currency
-     * or an error message for the invalid currency
+     * or an error message for the invalid currency.
      *
      * @param currency currency to print
+     *
+     * @see #print(List)
+     * @see Currency#isValid()
      * */
     public static void print(Currency currency) {
 
