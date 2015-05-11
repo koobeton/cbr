@@ -1,6 +1,6 @@
 package main;
 
-class Currency {
+public class Currency {
 
     private String name;
     private double todayValue;
@@ -23,19 +23,19 @@ class Currency {
         this.valid = true;
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    double getTodayValue() {
+    public double getTodayValue() {
         return todayValue;
     }
 
-    double getDelta() {
+    public double getDelta() {
         return todayValue - yesterdayValue;
     }
 
-    boolean isValid() {
+    public boolean isValid() {
         return valid;
     }
 }

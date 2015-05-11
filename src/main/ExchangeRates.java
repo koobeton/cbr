@@ -23,14 +23,19 @@ public class ExchangeRates {
     private static final String CBR_URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=";
 
     private String today, yesterday;
-    private List<Currency> currencyList = new ArrayList<>();
+    private List<Currency> currencyList;
 
-    private ExchangeRates() {
+    public ExchangeRates(String... currencies) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         Calendar calendar = Calendar.getInstance();
         today = dateFormat.format(calendar.getTime());
         calendar.add(Calendar.DAY_OF_YEAR, -1);
         yesterday = dateFormat.format(calendar.getTime());
+
+        currencyList = new ArrayList<>();
+        for (String currency : currencies) {
+            currencyList.add(new Currency(currency));
+        }
     }
 
     public static void main(String... args) {
@@ -40,22 +45,17 @@ public class ExchangeRates {
             System.exit(0);
         }
 
-        ExchangeRates rates = new ExchangeRates();
+        ExchangeRates exchangeRates = new ExchangeRates(args);
 
-        for (String arg : args) {
-            rates.currencyList.add(new Currency(arg));
-        }
-
-        rates.setCbrRates();
-
-        for (Currency currency : rates.currencyList) {
+        for (Currency currency : exchangeRates.getRates()) {
             print(currency);
         }
     }
 
-    private void setCbrRates() {
+    public List<Currency> getRates() {
         parseXML(getXML(yesterday));
         parseXML(getXML(today));
+        return currencyList;
     }
 
     private Document getXML(String date) {
@@ -121,7 +121,7 @@ public class ExchangeRates {
         }
     }
 
-    private static void print(Currency currency) {
+    public static void print(Currency currency) {
 
         String name = currency.getName();
         double todayValue = currency.getTodayValue();
