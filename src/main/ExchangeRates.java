@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -23,7 +24,6 @@ public class ExchangeRates {
 
     private static final String CBR_URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=";
 
-    private String lastDate, previousDate;
     private List<Currency> currencyList;
 
     /**
@@ -35,11 +35,6 @@ public class ExchangeRates {
      * @see Currency#isValid()
      * */
     public ExchangeRates(String... currencies) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-        Calendar calendar = Calendar.getInstance();
-        lastDate = dateFormat.format(calendar.getTime());
-        calendar.add(Calendar.DAY_OF_YEAR, -1);
-        previousDate = dateFormat.format(calendar.getTime());
 
         currencyList = new ArrayList<>();
         for (String currency : currencies) {
@@ -68,9 +63,30 @@ public class ExchangeRates {
      * @see Currency#isValid()
      * */
     public List<Currency> getRates() {
-        parseXML(getXML(previousDate));
-        parseXML(getXML(lastDate));
+
+        String lastDate = "";
+        Document xml = getXML(lastDate);
+        if (xml != null) {
+            lastDate = xml.getDocumentElement().getAttribute("Date");
+        }
+        parseXML(xml, true);
+
+        parseXML(getXML(getPreviousDate(lastDate)), false);
+
         return currencyList;
+    }
+
+    private String getPreviousDate(String date) {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        Calendar calendar = Calendar.getInstance();
+        try {
+            calendar.setTime(dateFormat.parse(date));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        calendar.add(Calendar.DAY_OF_YEAR, -1);
+        return dateFormat.format(calendar.getTime());
     }
 
     private Document getXML(String date) {
@@ -104,11 +120,9 @@ public class ExchangeRates {
         return document;
     }
 
-    private void parseXML(Document xml) {
+    private void parseXML(Document xml, boolean last) {
 
         if (xml == null) return;
-
-        String date = xml.getDocumentElement().getAttribute("Date");
 
         NodeList charCodeList = xml.getElementsByTagName("CharCode");
         for (int i = 0; i < charCodeList.getLength(); i++) {
@@ -124,10 +138,10 @@ public class ExchangeRates {
                     Element value = (Element) valute.getElementsByTagName("Value").item(0);
                     BigDecimal currentValue = new BigDecimal(value.getTextContent().replace(',', '.')).divide(currentNominal);
 
-                    if (date.equals(previousDate)) {
-                        currency.setPreviousValue(currentValue);
-                    } else if (date.equals(lastDate)) {
+                    if (last) {
                         currency.setLastValue(currentValue);
+                    } else {
+                        currency.setPreviousValue(currentValue);
                     }
 
                     currency.setValid();
@@ -163,7 +177,7 @@ public class ExchangeRates {
     public static void print(Currency currency) {
 
         String name = currency.getName();
-        BigDecimal todayValue = currency.getLastValue();
+        BigDecimal lastValue = currency.getLastValue();
         BigDecimal change = currency.getChange();
 
         AnsiConsole.systemInstall();
@@ -172,8 +186,8 @@ public class ExchangeRates {
                 getAnsiString(MAGENTA, name),
                 currency.isValid() ?
                         String.format("%s %s",
-                                getAnsiString(WHITE, String.format("%.4f", todayValue)),
-                                getAnsiString(change.signum() < 0 ? RED : GREEN, String.format("%+.2f", change))) :
+                                getAnsiString(WHITE, String.format("%10.4f", lastValue)),
+                                getAnsiString(change.signum() < 0 ? RED : GREEN, String.format("%+8.2f", change))) :
                         getAnsiString(RED, "no such currency")
                 );
 
