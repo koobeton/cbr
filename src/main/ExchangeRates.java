@@ -23,7 +23,7 @@ public class ExchangeRates {
 
     private static final String CBR_URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=";
 
-    private String today, yesterday;
+    private String lastDate, previousDate;
     private List<Currency> currencyList;
 
     /**
@@ -37,9 +37,9 @@ public class ExchangeRates {
     public ExchangeRates(String... currencies) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         Calendar calendar = Calendar.getInstance();
-        today = dateFormat.format(calendar.getTime());
+        lastDate = dateFormat.format(calendar.getTime());
         calendar.add(Calendar.DAY_OF_YEAR, -1);
-        yesterday = dateFormat.format(calendar.getTime());
+        previousDate = dateFormat.format(calendar.getTime());
 
         currencyList = new ArrayList<>();
         for (String currency : currencies) {
@@ -63,13 +63,13 @@ public class ExchangeRates {
      * @return a {@code List<Currency>} of currencies with a fixed rate
      *
      * @see Currency#getName()
-     * @see Currency#getTodayValue()
+     * @see Currency#getLastValue()
      * @see Currency#getChange()
      * @see Currency#isValid()
      * */
     public List<Currency> getRates() {
-        parseXML(getXML(yesterday));
-        parseXML(getXML(today));
+        parseXML(getXML(previousDate));
+        parseXML(getXML(lastDate));
         return currencyList;
     }
 
@@ -124,10 +124,10 @@ public class ExchangeRates {
                     Element value = (Element) valute.getElementsByTagName("Value").item(0);
                     BigDecimal currentValue = new BigDecimal(value.getTextContent().replace(',', '.')).divide(currentNominal);
 
-                    if (date.equals(yesterday)) {
-                        currency.setYesterdayValue(currentValue);
-                    } else if (date.equals(today)) {
-                        currency.setTodayValue(currentValue);
+                    if (date.equals(previousDate)) {
+                        currency.setPreviousValue(currentValue);
+                    } else if (date.equals(lastDate)) {
+                        currency.setLastValue(currentValue);
                     }
 
                     currency.setValid();
@@ -152,8 +152,8 @@ public class ExchangeRates {
     }
 
     /**
-     * Prints a currency name, today value and change for the valid currency
-     * or an error message for the invalid currency.
+     * Prints a currency name, a currency value at the last registered date
+     * and a change for the valid currency or an error message for the invalid currency.
      *
      * @param currency currency to print
      *
@@ -163,7 +163,7 @@ public class ExchangeRates {
     public static void print(Currency currency) {
 
         String name = currency.getName();
-        BigDecimal todayValue = currency.getTodayValue();
+        BigDecimal todayValue = currency.getLastValue();
         BigDecimal change = currency.getChange();
 
         AnsiConsole.systemInstall();

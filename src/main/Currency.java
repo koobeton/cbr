@@ -5,20 +5,20 @@ import java.math.BigDecimal;
 public class Currency {
 
     private String name;
-    private BigDecimal todayValue = BigDecimal.ZERO;
-    private BigDecimal yesterdayValue = BigDecimal.ZERO;
+    private BigDecimal lastValue = BigDecimal.ZERO;
+    private BigDecimal previousValue = BigDecimal.ZERO;
     private boolean valid = false;
 
     Currency(String name) {
         this.name = name.toUpperCase();
     }
 
-    void setTodayValue(BigDecimal todayValue) {
-        this.todayValue = todayValue;
+    void setLastValue(BigDecimal lastValue) {
+        this.lastValue = lastValue;
     }
 
-    void setYesterdayValue(BigDecimal yesterdayValue) {
-        this.yesterdayValue = yesterdayValue;
+    void setPreviousValue(BigDecimal previousValue) {
+        this.previousValue = previousValue;
     }
 
     void setValid() {
@@ -36,17 +36,17 @@ public class Currency {
     }
 
     /**
-     * @return a currency today value
+     * @return a currency value at the last registered date
      * */
-    public BigDecimal getTodayValue() {
-        return todayValue;
+    public BigDecimal getLastValue() {
+        return lastValue;
     }
 
     /**
      * @return a currency change
      * */
     public BigDecimal getChange() {
-        return todayValue.subtract(yesterdayValue);
+        return lastValue.subtract(previousValue);
     }
 
     /**
