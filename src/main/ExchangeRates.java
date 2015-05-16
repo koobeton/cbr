@@ -129,7 +129,7 @@ public class ExchangeRates {
             Element charCode = (Element) charCodeList.item(i);
 
             for (Currency currency : currencyList) {
-                if (currency.getName().toUpperCase().equals(charCode.getTextContent().toUpperCase())) {
+                if (currency.getName().equalsIgnoreCase(charCode.getTextContent())) {
                     Element valute = (Element) charCode.getParentNode();
 
                     Element nominal = (Element) valute.getElementsByTagName("Nominal").item(0);
