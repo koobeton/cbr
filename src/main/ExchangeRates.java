@@ -55,7 +55,7 @@ public class ExchangeRates {
     }
 
     /**
-     * @return a {@code List<Currency>} of currencies with a fixed rate
+     * @return a list of currencies with a fixed rate
      *
      * @see Currency#getName()
      * @see Currency#getLastValue()
@@ -151,7 +151,7 @@ public class ExchangeRates {
     }
 
     /**
-     * Prints a currencies in the {@code List<Currency>} as described in the {@link #print(Currency)}.
+     * Prints a currencies in the provided list as described in the {@link #print(Currency)}.
      *
      * @param currencies list of currencies to print
      *

@@ -17,7 +17,13 @@
         <jar destfile="${jar_name}" basedir="${build_dir}" manifest="${manifest}"/>
     </target>
 
-    <target name="all" description="Make distribution" depends="make_jar"/>
+    <target name="doc" description="Make a javadoc">
+        <delete dir="${doc_dir}"/>
+        <mkdir dir="${doc_dir}"/>
+        <javadoc destdir="${doc_dir}" sourcepath="src" packagenames="main"/>
+    </target>
+
+    <target name="all" description="Make distribution" depends="make_jar,doc"/>
 
     <target name="clean" description="Delete output folder">
         <delete dir="${build_dir}"/>
