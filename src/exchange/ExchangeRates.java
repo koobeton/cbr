@@ -1,4 +1,4 @@
-package main;
+package exchange;
 
 import static misc.Paint.*;
 
@@ -40,18 +40,6 @@ public class ExchangeRates {
         for (String currency : currencies) {
             currencyList.add(new Currency(currency));
         }
-    }
-
-    public static void main(String... args) {
-
-        if (args.length == 0) {
-            showUsage();
-            System.exit(0);
-        }
-
-        ExchangeRates exchangeRates = new ExchangeRates(args);
-
-        print(exchangeRates.getRates());
     }
 
     /**
@@ -190,19 +178,6 @@ public class ExchangeRates {
                                 getAnsiString(change.signum() < 0 ? RED : GREEN, String.format("%+8.2f", change))) :
                         getAnsiString(RED, "no such currency")
                 );
-
-        AnsiConsole.systemUninstall();
-    }
-
-    private static void showUsage() {
-
-        AnsiConsole.systemInstall();
-
-        System.out.printf("Usage: %s%n" +
-                        "\twhere %s - the ISO 4217 currency code (%s)%n",
-                getAnsiString(YELLOW, "java -jar cbr.jar code ..."),
-                getAnsiString(YELLOW, "code"),
-                getAnsiString(MAGENTA, "USD EUR GBP ..."));
 
         AnsiConsole.systemUninstall();
     }

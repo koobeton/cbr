@@ -19,7 +19,7 @@
 
     <target name="doc" description="Make a javadoc">
         <mkdir dir="${doc_dir}"/>
-        <javadoc destdir="${doc_dir}" sourcepath="src" packagenames="main"/>
+        <javadoc destdir="${doc_dir}" sourcepath="src" packagenames="exchange"/>
     </target>
 
     <target name="all" description="Make distribution" depends="make_jar"/>
