@@ -16,52 +16,46 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ExchangeRates {
 
     private static final String CBR_URL = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=";
 
-    private List<Currency> currencyList;
+    private Map<String, Currency> currencyMap;
 
     /**
-     * Creates an object of exchange rates from the provided alphabetic currency codes.
-     *
-     * @param currencies alphabetic currency codes (e.g. USD EUR GBP ...)
+     * Creates an object of exchange rates.
      *
      * @see Currency#getName()
-     * @see Currency#isValid()
      * */
-    public ExchangeRates(String... currencies) {
+    public ExchangeRates() {
 
-        currencyList = new ArrayList<>();
-        for (String currency : currencies) {
-            currencyList.add(new Currency(currency));
-        }
+        currencyMap = new HashMap<>();
     }
 
     /**
-     * @return a list of currencies with a fixed rate
+     * @return a map of currencies with a fixed rate
      *
      * @see Currency#getName()
      * @see Currency#getLastValue()
      * @see Currency#getChange()
-     * @see Currency#isValid()
      * */
-    public List<Currency> getRates() {
+    public Map<String, Currency> getRates() {
 
         String lastDate = "";
         Document xml = getXML(lastDate);
         if (xml != null) {
             lastDate = xml.getDocumentElement().getAttribute("Date");
         }
-        parseXML(xml, true);
+        parseXML(xml);
 
-        parseXML(getXML(getPreviousDate(lastDate)), false);
+        parseXML(getXML(getPreviousDate(lastDate)));
 
-        return currencyList;
+        return currencyMap;
     }
 
     private String getPreviousDate(String date) {
@@ -108,7 +102,7 @@ public class ExchangeRates {
         return document;
     }
 
-    private void parseXML(Document xml, boolean last) {
+    private void parseXML(Document xml) {
 
         if (xml == null) return;
 
@@ -116,37 +110,34 @@ public class ExchangeRates {
         for (int i = 0; i < charCodeList.getLength(); i++) {
             Element charCode = (Element) charCodeList.item(i);
 
-            for (Currency currency : currencyList) {
-                if (currency.getName().equalsIgnoreCase(charCode.getTextContent())) {
-                    Element valute = (Element) charCode.getParentNode();
+            String name = charCode.getTextContent().toUpperCase();
 
-                    Element nominal = (Element) valute.getElementsByTagName("Nominal").item(0);
-                    BigDecimal currentNominal = new BigDecimal(nominal.getTextContent());
+            Element valute = (Element) charCode.getParentNode();
 
-                    Element value = (Element) valute.getElementsByTagName("Value").item(0);
-                    BigDecimal currentValue = new BigDecimal(value.getTextContent().replace(',', '.')).divide(currentNominal);
+            Element nominal = (Element) valute.getElementsByTagName("Nominal").item(0);
+            BigDecimal currentNominal = new BigDecimal(nominal.getTextContent());
 
-                    if (last) {
-                        currency.setLastValue(currentValue);
-                    } else {
-                        currency.setPreviousValue(currentValue);
-                    }
+            Element value = (Element) valute.getElementsByTagName("Value").item(0);
+            BigDecimal currentValue = new BigDecimal(value.getTextContent().replace(',', '.')).divide(currentNominal);
 
-                    currency.setValid();
-                }
+            if (currencyMap.containsKey(name)) {
+                currencyMap.get(name).setPreviousValue(currentValue);
+            } else {
+                Currency currency = new Currency(name);
+                currency.setLastValue(currentValue);
+                currencyMap.put(name, currency);
             }
         }
     }
 
     /**
-     * Prints a currencies in the provided list as described in the {@link #print(Currency)}.
+     * Prints a currencies in the provided collection as described in the {@link #print(Currency)}.
      *
-     * @param currencies list of currencies to print
+     * @param currencies collection of currencies to print
      *
      * @see #print(Currency)
-     * @see Currency#isValid()
      * */
-    public static void print(List<Currency> currencies) {
+    public static void print(Collection<Currency> currencies) {
 
         for (Currency currency : currencies) {
             print(currency);
@@ -155,14 +146,15 @@ public class ExchangeRates {
 
     /**
      * Prints a currency name, a currency value at the last registered date
-     * and a change for the valid currency or an error message for the invalid currency.
+     * and a change for the currency.
      *
      * @param currency currency to print
      *
-     * @see #print(List)
-     * @see Currency#isValid()
+     * @see #print(Collection)
      * */
     public static void print(Currency currency) {
+
+        if (currency == null) return;
 
         String name = currency.getName();
         BigDecimal lastValue = currency.getLastValue();
@@ -172,12 +164,11 @@ public class ExchangeRates {
 
         System.out.printf("%s %s%n",
                 getAnsiString(MAGENTA, name),
-                currency.isValid() ?
-                        String.format("%s %s",
-                                getAnsiString(WHITE, String.format("%10.4f", lastValue)),
-                                getAnsiString(change.signum() < 0 ? RED : GREEN, String.format("%+8.2f", change))) :
-                        getAnsiString(RED, "no such currency")
-                );
+                String.format("%s %s",
+                        getAnsiString(WHITE, String.format("%10.4f", lastValue)),
+                        getAnsiString(change.signum() < 0 ? RED : GREEN, String.format("%+8.2f", change))
+                )
+        );
 
         AnsiConsole.systemUninstall();
     }

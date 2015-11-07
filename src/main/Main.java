@@ -1,34 +1,22 @@
 package main;
 
+import exchange.Currency;
 import exchange.ExchangeRates;
-import org.fusesource.jansi.AnsiConsole;
 
-import static misc.Paint.*;
+import java.util.Map;
 
 public class Main {
 
     public static void main(String... args) {
 
+        Map<String, Currency> rates = new ExchangeRates().getRates();
+
         if (args.length == 0) {
-            showUsage();
-            System.exit(0);
+            ExchangeRates.print(rates.values());
+        } else {
+            for (String arg : args) {
+                ExchangeRates.print(rates.get(arg.toUpperCase()));
+            }
         }
-
-        ExchangeRates exchangeRates = new ExchangeRates(args);
-
-        ExchangeRates.print(exchangeRates.getRates());
-    }
-
-    private static void showUsage() {
-
-        AnsiConsole.systemInstall();
-
-        System.out.printf("Usage: %s%n" +
-                        "\twhere %s - the ISO 4217 currency code (%s)%n",
-                getAnsiString(YELLOW, "java -jar cbr.jar code ..."),
-                getAnsiString(YELLOW, "code"),
-                getAnsiString(MAGENTA, "USD EUR GBP ..."));
-
-        AnsiConsole.systemUninstall();
     }
 }

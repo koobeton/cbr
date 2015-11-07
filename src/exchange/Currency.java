@@ -7,7 +7,6 @@ public class Currency {
     private String name;
     private BigDecimal lastValue = BigDecimal.ZERO;
     private BigDecimal previousValue = BigDecimal.ZERO;
-    private boolean valid = false;
 
     Currency(String name) {
         this.name = name.toUpperCase();
@@ -21,15 +20,10 @@ public class Currency {
         this.previousValue = previousValue;
     }
 
-    void setValid() {
-        this.valid = true;
-    }
-
     /**
-     * @return a given currency name (e.g. USD EUR GBP ...)
+     * @return a currency name (e.g. USD EUR GBP ...)
      *
-     * @see #isValid()
-     * @see ExchangeRates#ExchangeRates(String...)
+     * @see ExchangeRates#ExchangeRates()
      * */
     public String getName() {
         return name;
@@ -47,18 +41,5 @@ public class Currency {
      * */
     public BigDecimal getChange() {
         return lastValue.subtract(previousValue);
-    }
-
-    /**
-     * If the given currency name is not present in the server response,
-     * the currency is not valid.
-     *
-     * @return {@code true} if currency name present in the server response, {@code false} otherwise
-     *
-     * @see #getName()
-     * @see ExchangeRates#ExchangeRates(String...)
-     * */
-    public boolean isValid() {
-        return valid;
     }
 }
